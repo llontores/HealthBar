@@ -2,13 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 using System;
 
 public class HealthBar : MonoBehaviour
 {
-    [SerializeField] private float _duration;
-    [SerializeField] private TMP_Text _text;
     [SerializeField] private Health _health;
+    [SerializeField] private float _duration;
+    [SerializeField] private Slider _slider;
 
     private Coroutine _changeHPJob;
 
@@ -22,28 +23,29 @@ public class HealthBar : MonoBehaviour
         _health.AmountChanged -= ChangeHPWork;
     }
 
-    private IEnumerator ChangeHP(float targetHealth)
+    private IEnumerator ChangeHP(float target, float previousValue)
     {
         float elapsedTime = 0;
-        float start = Convert.ToSingle(_text.text);
-        float current = start;
+        float startValue = previousValue;
+        float current = startValue;
 
-        while (current != targetHealth)
+        while (true)
         {
             elapsedTime += Time.deltaTime;
-            current = Mathf.MoveTowards(start, targetHealth, (elapsedTime / _duration) * Mathf.Abs(targetHealth - start));
-            _text.text = current.ToString();
+            current = Mathf.Lerp(startValue, target, elapsedTime / _duration);
+            _slider.value = current / (_health.MaxValue - 1);
+
             yield return null;
         }
     }
 
-    public void ChangeHPWork(float target, float previousValue)
+    private void ChangeHPWork(float target, float previousValue)
     {
         if (_changeHPJob != null)
         {
             StopCoroutine(_changeHPJob);
         }
 
-        _changeHPJob = StartCoroutine(ChangeHP(target));
+        _changeHPJob = StartCoroutine(ChangeHP(target, previousValue));
     }
 }
